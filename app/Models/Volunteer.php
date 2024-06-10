@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class User extends Model
+class Volunteer extends Model
 {
     use HasFactory;
 
-    public function volunteer()
+    public function users()
     {
-    return $this->belongsTo(Volunteer::class, 'volenteerTypeId');
+        return $this->hasMany(User::class);
     }
 }
+
