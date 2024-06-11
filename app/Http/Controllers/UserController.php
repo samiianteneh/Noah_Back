@@ -10,11 +10,14 @@ class UserController extends Controller
     //
   function usersList($id = null)
     {
-           if ($id) {
-        return User::with('volunteer')->find($id);
-    } else {
-        return User::with('volunteer')->get();
-    }
+        if ($id)
+        {
+            return User::with('volunteer')->find($id);
+        }
+        else
+        {
+            return User::with('volunteer')->get();
+        }
     }
 
     function addUser(Request $request)
