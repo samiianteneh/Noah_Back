@@ -39,6 +39,8 @@ Route::post('eventEdit/{id}',[eventController::class, 'editEvent']);
 Route::delete('event/{id}',[eventController::class, 'deleteEvent']);
 Route::get('donation/{id?}',[donationController::class, 'donationList']);
 Route::post('donation',[donationController::class, 'addDonation']);
+Route::post('/payment/process', [donationController::class, 'processPayment']);
+Route::post('/payment/subscriptions', [donationController::class, 'processSubscription']);
 
 
 
