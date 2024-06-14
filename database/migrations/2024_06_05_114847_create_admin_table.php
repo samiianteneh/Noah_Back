@@ -11,11 +11,12 @@ return new class extends Migration
      */
   public function up(): void
 {
-    Schema::create('admin', function (Blueprint $table) {
-        $table->id();
+    Schema::create('admins', function (Blueprint $table) {
+        $table->uuid('id')->primary();
         $table->string('fullName');
         $table->string('email')->unique();
         $table->string('phone');
+        $table->string('role');
         $table->string('password');
         $table->string('image')->nullable(); // If you want the image field to be optional
         $table->timestamps();
