@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('phone', 20)->unique();
             $table->string('country', 100);
             $table->foreignUuid('volunteerTypeId')->references('id')->on('volunteers')->onDelete('cascade');
-            $table->string('image', 255)->nullable();
             $table->timestamps();
         });
     }
