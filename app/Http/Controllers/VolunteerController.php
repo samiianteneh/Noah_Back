@@ -13,9 +13,10 @@ class VolunteerController extends Controller
     }
     function addvolunteer(Request $request)
     {
+        // return $request;
         $volunteer = new Volunteer;
         $volunteer->name = $request->name;
-        $volunteer->description  = $request->description ;
+        $volunteer->description  = $request->description ; //dd("hello ". $volunteer->description);
         $result = $volunteer->save();
         if ($result) {
             $fromDatabase = Volunteer::find($volunteer->id);

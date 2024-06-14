@@ -16,13 +16,16 @@ class postController extends Controller
     }
 
     function addpost(Request $request)
-         {
+    {
         $posts = new Post;
         $posts->name = $request->name;
-        $posts->post_date  = $request->post_date ;
-        $posts->description  = $request->description ;
-        $imagePath = $request->file('image')->store('public');
-        $posts->image = $imagePath;
+        $posts->description = $request->description;
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('public');
+            $posts->image = $imagePath;
+        }
+
         $result = $posts->save();
 
         if ($result) {
@@ -33,14 +36,15 @@ class postController extends Controller
             ];
             return response()->json($response);
         } else {
-            return response()->json(["error" => "Failed to add posts"], 500);
+            return response()->json(["error" => "Failed to add Post"], 500);
         }
+
 
     }
     function editPost(Request $request)
     {
         $validated = $request->validate([
-            'id' => 'required|integer|exists:posts,id',
+            'id' => 'required|exists:posts,id',
             'name' => 'required|string',
             'description' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
@@ -56,7 +60,7 @@ class postController extends Controller
             if ($post->image) {
                 Storage::delete($post->image);
             }
-            $imagePath = $request->file('image')->store('public/images');
+            $imagePath = $request->file('image')->store('public');
             $post->image = $imagePath;
         }
 

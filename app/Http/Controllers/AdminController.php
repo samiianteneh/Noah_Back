@@ -14,25 +14,22 @@ class AdminController extends Controller
     }
     function addAdmin(Request $request)
     {
-        // return $request;
-        $admin = new Admin;
+        // return $request;// dd("hello ". $admin->image);
+       $admin = new Admin;
         $admin->fullname = $request->fullname;
-        $admin->email  = $request->email ;
-        $admin->phone  = $request->phone ;
-        $admin->password = $request->password;
+        $admin->email = $request->email;
+        $admin->phone = $request->phone;
+        $admin->password = bcrypt($request->password); // Encrypt the password
         $admin->role = $request->role;
-        // Store the image file
-        $imagePath = $request->file('image')->store('public');
 
-        // Save the image file name in the database
-        $admin->image = $imagePath;
-// dd("hello ". $admin->image);
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('public');
+            $admin->image = $imagePath;
+        }
 
-        // Save the admin details to the database
         $result = $admin->save();
 
         if ($result) {
-            // If saved successfully, retrieve the admin data from the database
             $fromDatabase = Admin::find($admin->id);
             $response = [
                 "message" => "success",
@@ -40,7 +37,6 @@ class AdminController extends Controller
             ];
             return response()->json($response);
         } else {
-            // If saving failed, return an error response
             return response()->json(["error" => "Failed to add Admin"], 500);
         }
 
@@ -48,10 +44,10 @@ class AdminController extends Controller
 
 public function editAdmin(Request $request, $id)
 {
+    // return $id;
     $validated = $request->validate([
         'email' => 'required',
         'fullName' => 'required|max:255',
-        // 'imageUrl' => 'required', // Validate 'imageUrl' received from front-end
         'phone' => 'required|max:255',
         'role' => 'required|max:255'
     ]);
@@ -82,6 +78,39 @@ public function editAdmin(Request $request, $id)
             // If saving failed, return an error response
             return response()->json(["error" => "Failed to add Admin"], 500);
         }
+         // $admin = Admin::find($id);
+        // if (!$admin) {
+        //     return response()->json(['message' => 'Admin not found'], 404);
+        // }
+        // $admin->fullname = $request->fullname;
+        // $admin->email = $request->email;
+        // $admin->phone = $request->phone;
+        // $admin->role = $request->role;
+
+        // if ($request->hasFile('image')) {
+        //     // Delete the old image if it exists
+        //     if ($admin->image) {
+        //         Storage::delete($admin->image);
+        //     }
+        //     // Store the new image
+        //     $imagePath = $request->file('image')->store('public');
+        //     $admin->image = $imagePath;
+        // }
+
+        // $result = $admin->save();
+
+        // if ($result) {
+        //     // If saved successfully, retrieve the admin data from the database
+        //     $fromDatabase = Admin::find($admin->id);
+        //     $response = [
+        //         "message" => "success",
+        //         "data" => $fromDatabase
+        //     ];
+        //     return response()->json($response);
+        // } else {
+        //     // If saving failed, return an error response
+        //     return response()->json(["error" => "Failed to update Admin"], 500);
+        // }
 
 }
 
