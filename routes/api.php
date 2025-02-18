@@ -49,6 +49,8 @@ Route::delete('event/{id}',[eventController::class, 'deleteEvent']);
 //donation
 Route::get('payment/balance',[donationController::class, 'donationList']);
 Route::post('payment/donation',[donationController::class, 'addDonation']);
+Route::get('/send-test-email', [donationController::class, 'sendTestEmail']);
+
 
 //payment
 Route::post('/payment/process', [donationController::class, 'processPayment']);

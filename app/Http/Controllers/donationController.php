@@ -3,13 +3,111 @@
 namespace App\Http\Controllers;
 
 use App\Models\Donation;
+use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\TemplateProcessor;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
 
 
 class donationController extends Controller
 {
+
+
+
+
+public function sendTestEmail($name, $amount, $email)
+{
+    try {
+        $from = 'samuel.abewa@gmail.com';
+        $ccEmails = ['nahomdebele002@gmail.com'];
+        $subject = "Subject: Receipt";
+        $body = "Greetings,\nAttached is your receipt for your donation. Thank you so much for your kindness and generosity.\nGenet Hailemichael";
+        $date = Carbon::now()->format('F j, Y'); // Format the date
+        $emailBody = "From: $from\nDate: $date\nTo: $email\nCc: " . implode(', ', $ccEmails) . "\n\n" . $body;
+
+        // Load the Word template
+        $template = new TemplateProcessor(public_path('PaySlipTemplate.docx'));
+        // Set dynamic values in the template
+        $template->setValue('name', $name);
+        $template->setValue('amount', $amount);
+        $template->setValue('email', $email);
+        $template->setValue('date', $date);
+
+        // Save the modified template as a new Word document
+        $wordFilePath = public_path('invoice.docx');
+        $template->saveAs($wordFilePath);
+
+        // Convert Word to HTML
+        $phpWord = IOFactory::load($wordFilePath);
+        $htmlFilePath = public_path('invoice.html');
+        $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
+        $htmlWriter->save($htmlFilePath);
+
+        // Initialize Dompdf
+        $options = new Options();
+        $options->set('defaultFont', 'Arial');
+        $dompdf = new Dompdf($options);
+
+        // Load HTML content into Dompdf
+        $dompdf->loadHtml(file_get_contents($htmlFilePath));
+        // Set paper size and orientation
+        $dompdf->setPaper('A4', 'portrait');
+        // Render the HTML as PDF
+        $dompdf->render();
+
+        // Save the PDF to file
+        $pdfFilePath = public_path('invoice.pdf');
+        file_put_contents($pdfFilePath, $dompdf->output());
+
+        // Send email with the PDF attachment
+        Mail::raw($emailBody, function ($message) use ($pdfFilePath, $email, $subject) {
+            $message->to($email)
+                    ->subject($subject)
+                    ->attach($pdfFilePath);
+        });
+
+        // Optionally, delete temporary files after sending the email
+        @unlink($wordFilePath); // Deletes the Word file
+        @unlink($htmlFilePath); // Deletes the HTML file
+        // @unlink($pdfFilePath); // Uncomment to delete the PDF file if no longer needed
+
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+}
+
+public function addDonation(Request $request)
+{
+    $donation = new Donation();
+    $donation->name = $request->name;
+    $donation->phone = $request->phone;
+    $donation->email = $request->email;
+    $donation->amount = $request->amount;
+
+    // Save the donation
+    $result = $donation->save();
+    if ($result) {
+        // Send the test email
+        $this->sendTestEmail($donation->name, $donation->amount, $donation->email);
+
+        // Retrieve the saved donation data
+        $fromDatabase = Donation::find($donation->id);
+        $response = [
+            "message" => "success",
+            "data" => $fromDatabase
+        ];
+        return response()->json($response);
+    } else {
+        return response()->json(["error" => "Failed to add Donation"], 500);
+    }
+}
+
+
      public function donationList()
     {
          $response = [
@@ -27,30 +125,7 @@ class donationController extends Controller
         // return Donation::all();
     }
 
-    public function addDonation(Request $request)
-    {
-        // return $request;
-        $donation = new Donation();
-        $donation->name= $request->name;
-        $donation->phone= $request->phone;
-        $donation->email= $request->email;
-        $donation->amount= $request->amount; //dd("hello ". $request->amount);
-        $result= $donation->save();
-        if ($result)
-        {
-            $fromDatabase = Donation::find($donation->id);
-            $response = [
-                "message" => "success",
-                "data" => $fromDatabase
-            ];
-            return response()->json($response);
-        }
-        else
-        {
-            return response()->json(["error" => "Failed to add Volunteer"], 500);
-        }
 
-    }
     public function processPayment(Request $request)
     {
         try {
@@ -81,8 +156,8 @@ class donationController extends Controller
                     'quantity' => 1,
                 ]],
                 'mode' => 'payment',
-                'success_url' => 'http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => 'http://localhost:3000/cancel',
+                'success_url' => 'https://ngh1.org/success',
+                'cancel_url' => 'https://ngh1.org/cancel',
             ]);
 
             return response()->json([
@@ -125,8 +200,8 @@ class donationController extends Controller
                     'quantity' => 1,
                 ]],
                 'mode' => 'subscription',
-                'success_url' => 'http://localhost:3000/success',
-                'cancel_url' => 'http://localhost:3000/cancel',
+                'success_url' => 'https://ngh1.org/success',
+                'cancel_url' => 'https://ngh1.org/cancel',
             ]);
 
             return response()->json([
